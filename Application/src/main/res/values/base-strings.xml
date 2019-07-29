@@ -16,7 +16,7 @@
 -->
 
 <resources>
-    <string name="app_name">WifiRttScan</string>
+    <string name="app_name">WifiRttBP</string>
     <string name="intro_message">
         <![CDATA[
         

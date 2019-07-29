@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.0-beta01'
+        classpath 'com.android.tools.build:gradle:3.4.2'
     }
 }
 
@@ -39,7 +39,6 @@ List<String> dirs = [
 android {
     compileSdkVersion 28
 
-    buildToolsVersion "27.0.3"
 
     defaultConfig {
         minSdkVersion 28
