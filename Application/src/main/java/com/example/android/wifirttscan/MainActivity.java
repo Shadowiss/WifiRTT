@@ -66,9 +66,11 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         mOutputTextView = findViewById(R.id.access_point_summary_text_view);
+
         mRecyclerView = findViewById(R.id.recycler_view);
 
         // Improve performance if you know that changes in content do not change the layout size
@@ -99,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
 
         registerReceiver(
                 mWifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+
+        onClickFindDistancesToAccessPoints(mRecyclerView);
     }
 
     @Override
