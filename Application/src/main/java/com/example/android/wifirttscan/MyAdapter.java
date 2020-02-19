@@ -29,7 +29,8 @@ import java.util.List;
  * Displays the ssid and bssid from a list of {@link ScanResult}s including a header at the top of
  * the {@link RecyclerView} to label the data.
  */
-public class MyAdapter extends RecyclerView.Adapter<ViewHolder> {
+public class MyAdapter extends RecyclerView.Adapter<ViewHolder>
+         {
     private static final int HEADER_POSITION = 0;
 
     private static final int TYPE_HEADER = 0;
@@ -37,9 +38,9 @@ public class MyAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     private static ScanResultClickListener sScanResultClickListener;
 
-    private List<ScanResult> mWifiAccessPointsWithRtt;
+    public List<ScanResult> mWifiAccessPointsWithRtt;
 
-    public MyAdapter(List<ScanResult> list, ScanResultClickListener scanResultClickListener) {
+    public MyAdapter(List<ScanResult> list, ScanResultClickListener scanResultClickListener){
         mWifiAccessPointsWithRtt = list;
         sScanResultClickListener = scanResultClickListener;
     }
@@ -48,24 +49,31 @@ public class MyAdapter extends RecyclerView.Adapter<ViewHolder> {
         public ViewHolderHeader(View view) {
             super(view);
         }
-    }
+     }
 
-    public class ViewHolderItem extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolderItem extends RecyclerView.ViewHolder implements View.OnClickListener
+             {
         public TextView mSsidTextView;
         public TextView mBssidTextView;
 
         public ViewHolderItem(View view) {
             super(view);
             view.setOnClickListener(this);
+
             mSsidTextView = view.findViewById(R.id.ssid_text_view);
             mBssidTextView = view.findViewById(R.id.bssid_text_view);
+            //sScanResultClickListener.onScanResultItemClick(mWifiAccessPointsWithRtt.get(0));
+            //sScanResultClickListener.onScanResultItemClick(mWifiAccessPointsWithRtt.get(1));
         }
 
         @Override
-        public void onClick(View view) {
-            sScanResultClickListener.onScanResultItemClick(getItem(getAdapterPosition()));
-        }
-    }
+         public void onClick(View view) {
+             //sScanResultClickListener.onScanResultItemClick(mWifiAccessPointsWithRtt);
+             sScanResultClickListener.onScanResultItemClick(getItem(getAdapterPosition()));
+             //sScanResultClickListener.onScanResultItemClick(mWifiAccessPointsWithRtt.get(0));
+             //sScanResultClickListener.onScanResultItemClick(mWifiAccessPointsWithRtt.get(1));
+         }
+         }
 
     public void swapData(List<ScanResult> list) {
 
@@ -86,10 +94,9 @@ public class MyAdapter extends RecyclerView.Adapter<ViewHolder> {
 
         if (viewType == TYPE_HEADER) {
             viewHolder =
-                    new ViewHolderHeader(
+                   new ViewHolderHeader(
                             LayoutInflater.from(parent.getContext())
                                     .inflate(R.layout.recycler_row_header, parent, false));
-
         } else if (viewType == TYPE_ITEM) {
             viewHolder =
                     new ViewHolderItem(
@@ -128,13 +135,13 @@ public class MyAdapter extends RecyclerView.Adapter<ViewHolder> {
         return mWifiAccessPointsWithRtt.get(position - 1);
     }
 
-    // Returns size of list plus the header item (adds extra item).
+     //Returns size of list plus the header item (adds extra item).
     @Override
     public int getItemCount() {
         return mWifiAccessPointsWithRtt.size() + 1;
     }
 
-    @Override
+    //@Override
     public int getItemViewType(int position) {
         if (position == HEADER_POSITION) {
             return TYPE_HEADER;
@@ -143,9 +150,10 @@ public class MyAdapter extends RecyclerView.Adapter<ViewHolder> {
         }
     }
 
-    // Used to inform the class containing the RecyclerView that one of the ScanResult items in the
-    // list was clicked.
-    public interface ScanResultClickListener {
-        void onScanResultItemClick(ScanResult scanResult);
+     //Used to inform the class containing the RecyclerView that one of the ScanResult items in the
+     //list was clicked.
+public interface ScanResultClickListener {
+    void onScanResultItemClick(ScanResult scanResult);
+    void onScanResultItemClick(List<ScanResult> scanResult);
     }
 }

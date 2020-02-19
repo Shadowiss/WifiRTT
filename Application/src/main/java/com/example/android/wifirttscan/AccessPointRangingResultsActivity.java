@@ -26,7 +26,6 @@ import android.net.wifi.rtt.RangingResultCallback;
 import android.net.wifi.rtt.WifiRttManager;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
@@ -51,8 +50,6 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
     private static final int SAMPLE_SIZE_DEFAULT = 50;
     private static final int MILLISECONDS_DELAY_BEFORE_NEW_RANGING_REQUEST_DEFAULT = 1000;
 
-    // UI Elements.
-    private TextView mSsidTextView;
     private TextView mBssidTextView;
 
     private TextView mRangeTextView;
@@ -105,15 +102,16 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_access_point_ranging_results);
 
         // Initializes UI elements.
-        mSsidTextView = findViewById(R.id.ssid);
+        // UI Elements.
+        TextView mSsidTextView = findViewById(R.id.ssid);
         mBssidTextView = findViewById(R.id.bssid);
 
         mRangeTextView = findViewById(R.id.range_value);
-        mRangeMeanTextView = findViewById(R.id.range_mean_value);
-        mRangeSDTextView = findViewById(R.id.range_sd_value);
-        mRangeSDMeanTextView = findViewById(R.id.range_sd_mean_value);
-        mRssiTextView = findViewById(R.id.rssi_value);
-        mSuccessesInBurstTextView = findViewById(R.id.successes_in_burst_value);
+//        mRangeMeanTextView = findViewById(R.id.range_mean_value);
+//        mRangeSDTextView = findViewById(R.id.range_sd_value);
+//        mRangeSDMeanTextView = findViewById(R.id.range_sd_mean_value);
+//        mRssiTextView = findViewById(R.id.rssi_value);
+//        mSuccessesInBurstTextView = findViewById(R.id.successes_in_burst_value);
         mSuccessRatioTextView = findViewById(R.id.success_ratio_value);
         mNumberOfRequestsTextView = findViewById(R.id.number_of_requests_value);
 
@@ -249,7 +247,7 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
     }
 
     // Class that handles callbacks for all RangingRequests and issues new RangingRequests.
-    private class RttRangingResultCallback extends RangingResultCallback {
+    public class RttRangingResultCallback extends RangingResultCallback {
 
         private void queueNextRangingRequest() {
             mRangeRequestDelayHandler.postDelayed(
@@ -269,9 +267,8 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onRangingResults(@NonNull List<RangingResult> list) {
+        public void onRangingResults(List<RangingResult> list) {
             Log.d(TAG, "onRangingResults(): " + list);
-
             // Because we are only requesting RangingResult for one access point (not multiple
             // access points), this will only ever be one. (Use loops when requesting RangingResults
             // for multiple access points.)
@@ -287,20 +284,20 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
 
                         mRangeTextView.setText((rangingResult.getDistanceMm() / 1000f) + "");
                         addDistanceToHistory(rangingResult.getDistanceMm());
-                        mRangeMeanTextView.setText((getDistanceMean() / 1000f) + "");
-
-                        mRangeSDTextView.setText(
-                                (rangingResult.getDistanceStdDevMm() / 1000f) + "");
-                        addStandardDeviationOfDistanceToHistory(
-                                rangingResult.getDistanceStdDevMm());
-                        mRangeSDMeanTextView.setText(
-                                (getStandardDeviationOfDistanceMean() / 1000f) + "");
-
-                        mRssiTextView.setText(rangingResult.getRssi() + "");
-                        mSuccessesInBurstTextView.setText(
-                                rangingResult.getNumSuccessfulMeasurements()
-                                        + "/"
-                                        + rangingResult.getNumAttemptedMeasurements());
+//                        mRangeMeanTextView.setText((getDistanceMean() / 1000f) + "");
+//
+//                        mRangeSDTextView.setText(
+//                                (rangingResult.getDistanceStdDevMm() / 1000f) + "");
+//                        addStandardDeviationOfDistanceToHistory(
+//                                rangingResult.getDistanceStdDevMm());
+//                        mRangeSDMeanTextView.setText(
+//                                (getStandardDeviationOfDistanceMean() / 1000f) + "");
+//
+//                        mRssiTextView.setText(rangingResult.getRssi() + "");
+//                        mSuccessesInBurstTextView.setText(
+//                                rangingResult.getNumSuccessfulMeasurements()
+//                                        + "/"
+//                                        + rangingResult.getNumAttemptedMeasurements());
 
                         float successRatio =
                                 ((float) mNumberOfSuccessfulRangeRequests

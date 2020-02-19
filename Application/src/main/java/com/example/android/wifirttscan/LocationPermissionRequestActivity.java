@@ -72,7 +72,7 @@ public class LocationPermissionRequestActivity extends AppCompatActivity
      */
     @Override
     public void onRequestPermissionsResult(
-            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            int requestCode, String[] permissions, int[] grantResults) {
 
         String permissionResult =
                 "Request code: "
