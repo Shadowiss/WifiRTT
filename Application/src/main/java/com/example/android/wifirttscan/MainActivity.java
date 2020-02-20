@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
     private int sumDist = 0;
     private int diameterMM = 0;
 
+    //private Trilateration trilateration = new Trilateration(3,2.6,1.9);
+    private Trilateration trilateration = new Trilateration(2.828,2.828,2.828);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -177,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
         // history to calculate averages.
 
         mStatisticRangeSDHistory = new ArrayList<>();
-
+        System.out.println("X: " + trilateration.getPosition()[0] + "Y: " + trilateration.getPosition()[1]);
         if(mAccessPointsSupporting80211mc.size() != 0) {
             startRangingRequest();
         }
@@ -230,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
         RangingRequest rangingRequest =
                 new RangingRequest.Builder().addAccessPoints(mAccessPointsSupporting80211mc).build();
                 //new RangingRequest.Builder().addAccessPoint(testovaci).build();
-        RangingRequest test;
+        //RangingRequest test;
         mWifiRttManager.startRanging(
                 rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
     }
@@ -293,6 +295,29 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
                 for(int i = 0; i < list.size(); i++) {
                     fWriter.write( j++ +" "+ list.get(i) + System.lineSeparator());
                     sumDist = sumDist + list.get(i).getDistanceMm();
+
+                    double ap1 = 0;
+                    double ap2 = 0;
+                    double ap3 = 0;
+
+                        if(list.size() == 3) {
+                            for(int x = 0; x < 3; x++){
+                                switch (list.get(x).getMacAddress().toString()){
+                                    case "70:3a:cb:7f:23:fb":
+                                        ap1 = list.get(x).getDistanceMm();
+                                        break;
+                                    case "70:3A:CB:7F:DC:17":
+                                        ap2 = list.get(x).getDistanceMm();
+                                        break;
+                                    case " 70:3A:CB:7F:22:82":
+                                        ap3 = list.get(x).getDistanceMm();
+                                        break;
+                                }
+                            }
+
+                        trilateration = new Trilateration(ap1, ap2, ap3);
+                        System.out.println("X: " + trilateration.getPosition()[0] + "Y: " + trilateration.getPosition()[1]);
+                    }
                 }
                 diameterMM = sumDist/j;
                 fWriter.write("Průměrná vzdálenost je: " + diameterMM + " mm" + System.lineSeparator());
