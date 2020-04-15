@@ -53,11 +53,6 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
     private TextView mBssidTextView;
 
     private TextView mRangeTextView;
-    private TextView mRangeMeanTextView;
-    private TextView mRangeSDTextView;
-    private TextView mRangeSDMeanTextView;
-    private TextView mRssiTextView;
-    private TextView mSuccessesInBurstTextView;
     private TextView mSuccessRatioTextView;
     private TextView mNumberOfRequestsTextView;
 
@@ -107,11 +102,6 @@ public class AccessPointRangingResultsActivity extends AppCompatActivity {
         mBssidTextView = findViewById(R.id.bssid);
 
         mRangeTextView = findViewById(R.id.range_value);
-//        mRangeMeanTextView = findViewById(R.id.range_mean_value);
-//        mRangeSDTextView = findViewById(R.id.range_sd_value);
-//        mRangeSDMeanTextView = findViewById(R.id.range_sd_mean_value);
-//        mRssiTextView = findViewById(R.id.rssi_value);
-//        mSuccessesInBurstTextView = findViewById(R.id.successes_in_burst_value);
         mSuccessRatioTextView = findViewById(R.id.success_ratio_value);
         mNumberOfRequestsTextView = findViewById(R.id.number_of_requests_value);
 

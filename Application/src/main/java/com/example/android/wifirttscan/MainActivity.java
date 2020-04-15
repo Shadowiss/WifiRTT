@@ -15,7 +15,9 @@
  */
 package com.example.android.wifirttscan;
 
+import static android.os.Build.VERSION_CODES.P;
 import static com.example.android.wifirttscan.AccessPointRangingResultsActivity.SCAN_RESULT_EXTRA;
+
 import android.Manifest.permission;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -30,7 +32,9 @@ import android.net.wifi.rtt.RangingRequest;
 import android.net.wifi.rtt.RangingResult;
 import android.net.wifi.rtt.RangingResultCallback;
 import android.net.wifi.rtt.WifiRttManager;
+import android.os.Build;
 import android.os.Bundle;
+
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -47,7 +51,9 @@ import com.example.android.wifirttscan.MyAdapter.ScanResultClickListener;
 
 
 import java.io.File;
-import java.io.FileWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,8 +61,7 @@ import java.util.List;
  * Displays list of Access Points enabled with WifiRTT (to check distance). Requests location
  * permissions if they are not approved via secondary splash screen explaining why they are needed.
  */
-public class MainActivity extends AppCompatActivity implements ScanResultClickListener
-{
+public class MainActivity extends AppCompatActivity implements ScanResultClickListener {
 
     private static final String TAG = "MainActivity";
     private boolean mLocationPermissionApproved = false;
@@ -70,16 +75,13 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
 
     private WifiRttManager mWifiRttManager;
     private RttRangingResultCallback mRttRangingResultCallback;
-    private int mStatisticRangeSDHistoryEndIndex;
-    private ArrayList<Integer> mStatisticRangeSDHistory;
     final Handler mRangeRequestDelayHandler = new Handler();
 
-    private int j;
-    private int sumDist = 0;
-    private int diameterMM = 0;
+    private FileWriters fileWriter = new FileWriters();
 
     //private Trilateration trilateration = new Trilateration(3,2.6,1.9);
-    private Trilateration trilateration = new Trilateration(2.828,2.828,2.828);
+    private Trilateration trilateration = new Trilateration(4, 2.828, 2.828);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,13 +105,13 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
         mAdapter = new MyAdapter(mAccessPointsSupporting80211mc, this);
         mRecyclerView.setAdapter(mAdapter);
 
-        j=0;
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         mWifiScanReceiver = new WifiScanReceiver();
         logToUi(getString(R.string.retrieving_access_points));
     }
 
     @Override
+    //Když APPka běží vykonává se měření
     protected void onResume() {
         Log.d(TAG, "onResume()");
         super.onResume();
@@ -132,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
         unregisterReceiver(mWifiScanReceiver);
     }
 
+    // Výpis do UI
     private void logToUi(final String message) {
         if (!message.isEmpty()) {
             Log.d(TAG, message);
@@ -141,26 +144,12 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
 
     @Override
     public void onScanResultItemClick(ScanResult scanResult) {
-//        Log.d(TAG, "onScanResultItemClick(): ssid: " + scanResult.SSID);
-//
-//        Intent intent = new Intent(this, AccessPointRangingResultsActivity.class);
-//        intent.putExtra(SCAN_RESULT_EXTRA, scanResult);
-//        startActivity(intent);
     }
-
-    @Override
-    public void onScanResultItemClick(List<ScanResult> scanResult) {
-            Log.d(TAG, "onScanResultItemClick(): ssid: " + scanResult.get(0).SSID);
-            Intent intent = new Intent(this, AccessPointRangingResultsActivity.class);
-            intent.putExtra(SCAN_RESULT_EXTRA, scanResult.get(0));
-            startActivity(intent);
-    }
-
+    // Funkce scanující AP v okolí
     public void onClickFindDistancesToAccessPoints(View view) {
         if (mLocationPermissionApproved) {
             //logToUi(getString(R.string.retrieving_access_points));
             mWifiManager.startScan();
-
         } else {
             // On 23+ (M+) devices, fine location permission not granted. Request permission.
             Intent startIntent = new Intent(this, LocationPermissionRequestActivity.class);
@@ -175,17 +164,13 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
         File sdCardFile = new File(Environment.getExternalStorageDirectory() + "/WifiRTTmeasured.txt");
         sdCardFile.delete();
 
-        // Used to store range (distance) and rangeSd (standard deviation of the measured distance)
-        // history to calculate averages.
-
-        mStatisticRangeSDHistory = new ArrayList<>();
         System.out.println("X: " + trilateration.getPosition()[0] + "Y: " + trilateration.getPosition()[1]);
-        if(mAccessPointsSupporting80211mc.size() != 0) {
+        if (mAccessPointsSupporting80211mc.size() != 0) {
             startRangingRequest();
         }
     }
 
-    public void onClickStopRanging(View view){
+    public void onClickStopRanging(View view) {
         mAccessPointsSupporting80211mc.clear();
     }
 
@@ -197,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
                     new Runnable() {
                         @Override
                         public void run() {
-                            if(mAccessPointsSupporting80211mc.size() != 0) {
+                            if (mAccessPointsSupporting80211mc.size() != 0) {
                                 startRangingRequest();
                             }
                         }
@@ -214,12 +199,20 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
         @Override
         public void onRangingResults(List<RangingResult> list) {
             Log.d(TAG, "onRangingResults(): " + list);
-            fileWriter(list);
+            //Při každém resultu zapíšu do souboru
+//            fileWriter.fileWriterOneAP(list);
+//            //Testování trilaterace
+//            //Trilateration test = new Trilateration(2.82, 2.82, 2.82);
+//            Trilateration test = new Trilateration(list.get(0).getDistanceMm()/1000
+//                    , list.get(1).getDistanceMm()/1000
+//                    , list.get(2).getDistanceMm()/1000);
+//            System.out.println("(" + test.getPosition()[0] + " , " + test.getPosition()[1] + ")");
+
             queueNextRangingRequest();
         }
     }
 
-
+    //TODO zjistit jak měřit podle mac adresy!!!
     private void startRangingRequest() {
         // Permission for fine location should already be granted via MainActivity (you can't get
         // to this class unless you already have permission. If they get to this class, then disable
@@ -228,13 +221,60 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
                 != PackageManager.PERMISSION_GRANTED) {
             finish();
         }
-        Log.d("TAG","TEST" + mAccessPointsSupporting80211mc.toString()); //<-- check the log to make sure the path is correct.
-        RangingRequest rangingRequest =
-                new RangingRequest.Builder().addAccessPoints(mAccessPointsSupporting80211mc).build();
-                //new RangingRequest.Builder().addAccessPoint(testovaci).build();
-        //RangingRequest test;
-        mWifiRttManager.startRanging(
-                rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
+        Log.d("TAG", "TEST" + mAccessPointsSupporting80211mc.toString()); //<-- check the log to make sure the path is correct.
+        RangingRequest rangingRequest;
+        //RangingRequest rangingRequest =
+                //new RangingRequest.Builder().addAccessPoints(mAccessPointsSupporting80211mc).build();
+        //new RangingRequest.Builder().addAccessPoint(MacAddress.fromString("70:3A:CB:7F:23:FB")).build();
+        //new RangingRequest.Builder().addWifiAwarePeer(MacAddress.fromString("70:3A:CB:7F:23:FB")).build();
+
+
+
+        try {
+            final Constructor c = ScanResult.class.getDeclaredConstructor();
+            c.setAccessible(true);
+            ScanResult r = (ScanResult) c.newInstance();
+            r.BSSID = "70:3a:cb:7f:23:fb";
+            r.SSID = "WifiRTT1";
+            r.capabilities = "[WPA2-PSK-CCMP][RSN-PSK-CCMP][ESS]";
+            r.level = -53;
+            r.frequency = 5180;
+            @SuppressLint("SoonBlockedPrivateApi") Method method = r.getClass().getDeclaredMethod("setFlag", Long.TYPE);
+            method.setAccessible(true);
+            Object x = method.invoke(r, 2); // FLAG_80211mc_RESPONDER
+
+            rangingRequest = new RangingRequest.Builder().addAccessPoint(r).build();
+
+            mWifiRttManager.startRanging(
+                    rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
+
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+//        ScanResult scanResult = Shadow.newInstanceOf(ScanResult.class);
+//        scanResult.SSID = "WifiRTT1";
+//        scanResult.BSSID = "70:3a:cb:7f:23:fb";
+//        scanResult.capabilities = "[WPA2-PSK-CCMP][RSN-PSK-CCMP][ESS]";
+//        scanResult.level = -53;
+//        scanResult.frequency = 5180;
+//
+//        rangingRequest = new RangingRequest.Builder().addAccessPoint(scanResult).build();
+//
+//        mWifiRttManager.startRanging(
+//                rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
+
+        //scanResult.setFlag(ScanResult.FLAG_80211mc_RESPONDER);
+
+
+
+
     }
 
     private class WifiScanReceiver extends BroadcastReceiver {
@@ -280,54 +320,6 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
                     Log.d(TAG, "Permissions not allowed.");
                 }
             }
-        }
-    }
-
-    public void fileWriter(List<RangingResult> list){
-
-        FileWriter fWriter;
-        File sdCardFile = new File(Environment.getExternalStorageDirectory() + "/WifiRTTmeasured.txt");
-        Log.d("TAG", sdCardFile.getPath()); //<-- check the log to make sure the path is correct.
-        try{
-            fWriter = new FileWriter(sdCardFile, true);
-            //if(sdCardFile.length() < 100000) {
-            if(j <= 100){
-                for(int i = 0; i < list.size(); i++) {
-                    fWriter.write( j++ +" "+ list.get(i) + System.lineSeparator());
-                    sumDist = sumDist + list.get(i).getDistanceMm();
-
-                    double ap1 = 0;
-                    double ap2 = 0;
-                    double ap3 = 0;
-
-                        if(list.size() == 3) {
-                            for(int x = 0; x < 3; x++){
-                                switch (list.get(x).getMacAddress().toString()){
-                                    case "70:3a:cb:7f:23:fb":
-                                        ap1 = list.get(x).getDistanceMm();
-                                        break;
-                                    case "70:3A:CB:7F:DC:17":
-                                        ap2 = list.get(x).getDistanceMm();
-                                        break;
-                                    case " 70:3A:CB:7F:22:82":
-                                        ap3 = list.get(x).getDistanceMm();
-                                        break;
-                                }
-                            }
-
-                        trilateration = new Trilateration(ap1, ap2, ap3);
-                        System.out.println("X: " + trilateration.getPosition()[0] + "Y: " + trilateration.getPosition()[1]);
-                    }
-                }
-                diameterMM = sumDist/j;
-                fWriter.write("Průměrná vzdálenost je: " + diameterMM + " mm" + System.lineSeparator());
-                fWriter.flush();
-                fWriter.close();
-            }else{
-                //sdCardFile.delete();
-            }
-        }catch(Exception e){
-            e.printStackTrace();
         }
     }
 }

@@ -154,6 +154,5 @@ public class MyAdapter extends RecyclerView.Adapter<ViewHolder>
      //list was clicked.
 public interface ScanResultClickListener {
     void onScanResultItemClick(ScanResult scanResult);
-    void onScanResultItemClick(List<ScanResult> scanResult);
     }
 }
