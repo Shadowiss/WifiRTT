@@ -82,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
     //private Trilateration trilateration = new Trilateration(3,2.6,1.9);
     private Trilateration trilateration = new Trilateration(4, 2.828, 2.828);
 
+    private knownAPs aps = new knownAPs();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
     @Override
     public void onScanResultItemClick(ScanResult scanResult) {
     }
+
     // Funkce scanující AP v okolí
     public void onClickFindDistancesToAccessPoints(View view) {
         if (mLocationPermissionApproved) {
@@ -177,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
     public class RttRangingResultCallback extends RangingResultCallback {
 
         private void queueNextRangingRequest() {
-            onClickFindDistancesToAccessPoints(mRecyclerView);
+            //onClickFindDistancesToAccessPoints(mRecyclerView);
             mRangeRequestDelayHandler.postDelayed(
                     new Runnable() {
                         @Override
@@ -187,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
                             }
                         }
                     },
-                    100);
+                    500);
         }
 
         @Override
@@ -196,18 +199,20 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
             queueNextRangingRequest();
         }
 
+        @SuppressLint("WrongConstant")
         @Override
         public void onRangingResults(List<RangingResult> list) {
-            Log.d(TAG, "onRangingResults(): " + list);
+            //Log.d(TAG, "onRangingResults(): " + list);
             //Při každém resultu zapíšu do souboru
-//            fileWriter.fileWriterOneAP(list);
-//            //Testování trilaterace
-//            //Trilateration test = new Trilateration(2.82, 2.82, 2.82);
-//            Trilateration test = new Trilateration(list.get(0).getDistanceMm()/1000
-//                    , list.get(1).getDistanceMm()/1000
-//                    , list.get(2).getDistanceMm()/1000);
-//            System.out.println("(" + test.getPosition()[0] + " , " + test.getPosition()[1] + ")");
-
+            //fileWriter.fileWriterOneAP(list);
+            //Testování trilaterace
+            //Trilateration test = new Trilateration(2.82, 2.82, 2.82);
+            if(list.get(0).getStatus() != 1 && list.get(1).getStatus() != 1 && list.get(2).getStatus() != 1) {
+                Trilateration test = new Trilateration(list.get(0).getDistanceMm() / 1000
+                        , list.get(1).getDistanceMm() / 1000
+                        , list.get(2).getDistanceMm() / 1000);
+                System.out.println("(" + test.getPosition()[0] + " , " + test.getPosition()[1] + ")");
+            }
             queueNextRangingRequest();
         }
     }
@@ -221,59 +226,14 @@ public class MainActivity extends AppCompatActivity implements ScanResultClickLi
                 != PackageManager.PERMISSION_GRANTED) {
             finish();
         }
-        Log.d("TAG", "TEST" + mAccessPointsSupporting80211mc.toString()); //<-- check the log to make sure the path is correct.
+        //Log.d("TAG", "TEST" + mAccessPointsSupporting80211mc.toString()); //<-- check the log to make sure the path is correct.
         RangingRequest rangingRequest;
-        //RangingRequest rangingRequest =
+        rangingRequest =
                 //new RangingRequest.Builder().addAccessPoints(mAccessPointsSupporting80211mc).build();
-        //new RangingRequest.Builder().addAccessPoint(MacAddress.fromString("70:3A:CB:7F:23:FB")).build();
-        //new RangingRequest.Builder().addWifiAwarePeer(MacAddress.fromString("70:3A:CB:7F:23:FB")).build();
+                new RangingRequest.Builder().addAccessPoints(aps.scanResults).build();
 
-
-
-        try {
-            final Constructor c = ScanResult.class.getDeclaredConstructor();
-            c.setAccessible(true);
-            ScanResult r = (ScanResult) c.newInstance();
-            r.BSSID = "70:3a:cb:7f:23:fb";
-            r.SSID = "WifiRTT1";
-            r.capabilities = "[WPA2-PSK-CCMP][RSN-PSK-CCMP][ESS]";
-            r.level = -53;
-            r.frequency = 5180;
-            @SuppressLint("SoonBlockedPrivateApi") Method method = r.getClass().getDeclaredMethod("setFlag", Long.TYPE);
-            method.setAccessible(true);
-            Object x = method.invoke(r, 2); // FLAG_80211mc_RESPONDER
-
-            rangingRequest = new RangingRequest.Builder().addAccessPoint(r).build();
-
-            mWifiRttManager.startRanging(
-                    rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
-
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-//        ScanResult scanResult = Shadow.newInstanceOf(ScanResult.class);
-//        scanResult.SSID = "WifiRTT1";
-//        scanResult.BSSID = "70:3a:cb:7f:23:fb";
-//        scanResult.capabilities = "[WPA2-PSK-CCMP][RSN-PSK-CCMP][ESS]";
-//        scanResult.level = -53;
-//        scanResult.frequency = 5180;
-//
-//        rangingRequest = new RangingRequest.Builder().addAccessPoint(scanResult).build();
-//
-//        mWifiRttManager.startRanging(
-//                rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
-
-        //scanResult.setFlag(ScanResult.FLAG_80211mc_RESPONDER);
-
-
-
+        mWifiRttManager.startRanging(
+                rangingRequest, getApplication().getMainExecutor(), mRttRangingResultCallback);
 
     }
 

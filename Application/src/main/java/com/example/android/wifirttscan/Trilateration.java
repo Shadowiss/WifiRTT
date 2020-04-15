@@ -16,9 +16,9 @@ public class Trilateration {
     private double r3;
 
     public Trilateration(double r1, double r2, double r3) {
-        this.r1 = r1;
-        this.r2 = r2;
-        this.r3 = r3;
+        this.r1 = Math.abs(r1);
+        this.r2 = Math.abs(r2);
+        this.r3 = Math.abs(r3);
     }
 
     public double[] getPosition(){
